@@ -576,7 +576,12 @@ public class MosaicProxy extends CaptureTransformer
         if (jpegData != null) {
             String filename = PanoUtil.createName(
                     mActivity.getResources().getString(R.string.pano_file_name_format), mTimeTaken);
-            String filePath = Storage.getStorage().writeFile(filename, jpegData);
+            String filePath;
+            try {
+                filePath = Storage.writeFile(filename, jpegData);
+            } catch(Exception e) {
+                return null;
+            }
 
             // Add Exif tags.
             try {
@@ -595,8 +600,9 @@ public class MosaicProxy extends CaptureTransformer
             }
 
             int jpegLength = (int) (new File(filePath).length());
-            return Storage.getStorage().addImage(mActivity.getContentResolver(), filename,
-                    mTimeTaken, null, orientation, jpegLength, filePath, width, height);
+            return Storage.addImage(mActivity.getContentResolver(), filename,
+                                    mTimeTaken, null, orientation, jpegLength,
+                                    filePath, width, height);
         }
         return null;
     }

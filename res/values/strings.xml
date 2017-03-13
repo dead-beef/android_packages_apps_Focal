@@ -60,6 +60,7 @@
     <string name="widget_settings_exposure_ring">Show exposure ring</string>
     <string name="widget_settings_autoenhance">Auto-enhancement</string>
     <string name="widget_settings_ruleofthirds">Rule of Thirds</string>
+    <string name="widget_settings_storage_directory">Storage directory</string>
 
     <string name="widget_autoexposure">Light measure</string>
     <string name="widget_burstmode">Burst mode</string>

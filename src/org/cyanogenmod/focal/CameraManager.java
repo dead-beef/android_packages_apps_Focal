@@ -427,7 +427,7 @@ public class CameraManager {
         }
         setPreviewSize(optimalPreview.width, optimalPreview.height);
     }
-    
+
     public void setPreviewSize(int width, int height) {
         mTargetSize = new Point(width, height);
 
@@ -665,8 +665,7 @@ public class CameraManager {
         mMediaRecorder.setProfile(profile);
         mMediaRecorder.setOutputFile(fileName);
         // Set maximum file size.
-        long maxFileSize = Storage.getStorage().getAvailableSpace()
-                - Storage.LOW_STORAGE_THRESHOLD;
+        long maxFileSize = Storage.getAvailableSpace() - Storage.LOW_STORAGE_THRESHOLD;
         mMediaRecorder.setMaxFileSize(maxFileSize);
         mMediaRecorder.setMaxDuration(0); // infinite
 

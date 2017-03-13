@@ -667,13 +667,13 @@ public class SnapshotManager {
         long dateTaken = System.currentTimeMillis();
         String title = Util.createVideoName(dateTaken);
         // Used when emailing.
-        String filename = title + convertOutputFormatToFileExt(outputFileFormat);
+        String ext = convertOutputFormatToFileExt(outputFileFormat);
         String mime = convertOutputFormatToMimeType(outputFileFormat);
-        String path = Storage.getStorage().generateDirectory() + '/' + filename;
+        String path = Storage.generateFilepath(title, ext);
         String tmpPath = path + ".tmp";
         mCurrentVideoValues = new ContentValues(7);
         mCurrentVideoValues.put(MediaStore.Video.Media.TITLE, title);
-        mCurrentVideoValues.put(MediaStore.Video.Media.DISPLAY_NAME, filename);
+        mCurrentVideoValues.put(MediaStore.Video.Media.DISPLAY_NAME, title);
         mCurrentVideoValues.put(MediaStore.Video.Media.DATE_TAKEN, dateTaken);
         mCurrentVideoValues.put(MediaStore.Video.Media.MIME_TYPE, mime);
         mCurrentVideoValues.put(MediaStore.Video.Media.DATA, path);
@@ -881,8 +881,8 @@ public class SnapshotManager {
         private void storeImage(final byte[] data, Uri uri, String title,
                                 Location loc, int width, int height, int orientation,
                                 List<Tag> exifTags, SnapshotInfo snap) {
-            boolean ok = Storage.getStorage().updateImage(mContentResolver, uri, title, loc,
-                    orientation, data, width, height);
+            boolean ok = Storage.updateImage(mContentResolver, uri, title, loc,
+                                             orientation, data, width, height);
 
             if (ok) {
                 if (exifTags != null && exifTags.size() > 0) {
@@ -998,13 +998,13 @@ public class SnapshotManager {
         // Runs in namer thread
         private void generateUri() {
             mTitle = Util.createJpegName(mDateTaken);
-            mUri = Storage.getStorage().newImage(mResolver, mTitle, mDateTaken, mWidth, mHeight);
+            mUri = Storage.newImage(mResolver, mTitle, mDateTaken, mWidth, mHeight);
         }
 
         // Runs in namer thread
         private void cleanOldUri() {
             if (mUri == null) return;
-            Storage.getStorage().deleteImage(mResolver, mUri);
+            Storage.deleteImage(mResolver, mUri);
             mUri = null;
         }
     }

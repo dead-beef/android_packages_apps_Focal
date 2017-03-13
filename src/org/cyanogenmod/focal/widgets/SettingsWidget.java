@@ -20,12 +20,17 @@
 package org.cyanogenmod.focal.widgets;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.hardware.Camera;
 import android.media.CamcorderProfile;
+import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.NumberPicker;
+import android.widget.Spinner;
+import android.widget.TextView;
 
 import org.cyanogenmod.focal.CameraActivity;
 import org.cyanogenmod.focal.CameraCapabilities;
@@ -33,7 +38,9 @@ import org.cyanogenmod.focal.CameraManager;
 import fr.xplod.focal.R;
 import org.cyanogenmod.focal.SettingsStorage;
 import org.cyanogenmod.focal.SnapshotManager;
+import org.cyanogenmod.focal.Storage;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,6 +60,7 @@ public class SettingsWidget extends WidgetBase {
     private static final String KEY_ENABLE_AUTO_ENHANCE = "AutoEnhanceEnabled";
     private static final String KEY_ENABLE_RULE_OF_THIRDS = "RuleOfThirdsEnabled";
     private WidgetOptionButton mResolutionButton;
+    private WidgetOptionButton mDirectoryButton;
     private WidgetOptionButton mToggleExposureRing;
     private WidgetOptionButton mToggleAutoEnhancer;
     private WidgetOptionButton mToggleWidgetsButton;
@@ -64,7 +72,9 @@ public class SettingsWidget extends WidgetBase {
     private List<Camera.Size> mResolutions;
     private AlertDialog mResolutionDialog;
     private AlertDialog mWidgetsDialog;
+    private AlertDialog mDirectoryDialog;
     private NumberPicker mNumberPicker;
+    private Spinner mDirectoryPicker;
     private int mInitialOrientation = -1;
     private int mOrientation;
 
@@ -228,6 +238,51 @@ public class SettingsWidget extends WidgetBase {
         }
     };
 
+    private View.OnClickListener mStorageDirectoryClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            ArrayAdapter adapter = new ArrayAdapter(mContext,
+                                                    android.R.layout.simple_spinner_dropdown_item) {
+                @Override
+                public View getDropDownView(final int position, View view, ViewGroup parent) {
+                    TextView item = (TextView)super.getDropDownView(position, view, parent);
+                    final TextView finalItem = item;
+                    item.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            finalItem.setSingleLine(false);
+                        }
+                    });
+                    return item;
+                }
+            };
+
+            adapter.addAll((Object[])Storage.getRootList());
+
+            mDirectoryPicker = new Spinner(mContext, Spinner.MODE_DROPDOWN);
+            mDirectoryPicker.setAdapter(adapter);
+            mDirectoryPicker.setSelection(Storage.getRootIndex());
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+            builder.setView(mDirectoryPicker);
+            builder.setTitle(null);
+            builder.setCancelable(false);
+            builder.setPositiveButton(mContext.getString(R.string.ok),
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            int idx = mDirectoryPicker.getSelectedItemPosition();
+                            Storage.setRoot(idx);
+                            SettingsStorage.storeAppSetting(mContext, "storage-directory",
+                                                            Storage.getRoot());
+                        }
+                    });
+
+            mDirectoryDialog = builder.create();
+            mDirectoryDialog.show();
+        }
+    };
+
     public SettingsWidget(CameraActivity context, CameraCapabilities capabilities) {
         super(context.getCamManager(), context, R.drawable.ic_widget_settings);
         mContext = context;
@@ -315,6 +370,12 @@ public class SettingsWidget extends WidgetBase {
         mResolutionButton.setOnClickListener(mResolutionClickListener);
         mResolutionButton.setHintText(mContext.getString(R.string.widget_settings_picture_size));
         addViewToContainer(mResolutionButton);
+
+        mDirectoryButton = new WidgetOptionButton(
+                R.drawable.ic_widget_burst, context);
+        mDirectoryButton.setOnClickListener(mStorageDirectoryClickListener);
+        mDirectoryButton.setHintText(mContext.getString(R.string.widget_settings_storage_directory));
+        addViewToContainer(mDirectoryButton);
 
         if (mCamManager.isExposureAreaSupported()
                 && CameraActivity.getCameraMode() != CameraActivity.CAMERA_MODE_PICSPHERE) {

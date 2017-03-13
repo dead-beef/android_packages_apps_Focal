@@ -22,6 +22,7 @@ package org.cyanogenmod.focal;
 import android.annotation.TargetApi;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
@@ -34,34 +35,18 @@ import android.util.Log;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 
-public class Storage {
-    private static final String TAG = "CameraStorage";
+public class Storage extends tk.dead_beef.storageutils.Storage {
+    protected static final String TAG = "CameraStorage";
 
     public static final long UNAVAILABLE = -1L;
     public static final long PREPARING = -2L;
     public static final long UNKNOWN_SIZE = -3L;
     public static final long LOW_STORAGE_THRESHOLD = 50000000;
 
-    private String mRoot = Environment.getExternalStorageDirectory().toString();
-    private static Storage sStorage;
-
-    // Singleton
-    private Storage() {
-        // Do nothing here
-    }
-
-    public static Storage getStorage() {
-        if (sStorage == null) {
-            sStorage = new Storage();
-        }
-
-        return sStorage;
-    }
-
-    public void setRoot(String root) {
-        mRoot = root;
-    }
+    private Storage() {}
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private static void setImageSize(ContentValues values, int width, int height) {
@@ -69,35 +54,43 @@ public class Storage {
         values.put(MediaColumns.HEIGHT, height);
     }
 
-    public String writeFile(String title, byte[] data) {
-        String path = generateFilepath(title);
+    public static String writeFile(String title, byte[] data) throws Exception {
+        String path = generateFilepath(title, data.length);
         FileOutputStream out = null;
         try {
             out = new FileOutputStream(path);
             out.write(data);
         } catch (Exception e) {
-            Log.e(TAG, "Failed to write data", e);
+            Log.e(TAG, path + ": failed to write data", e);
+            throw e;
         } finally {
             try {
-                out.close();
-            } catch (Exception e) {
+                if(out != null) out.close();
+            } catch (IOException e) {
+                Log.e(TAG, path + ": failed to close file", e);
             }
         }
         return path;
     }
 
     // Save the image and add it to media store.
-    public Uri addImage(ContentResolver resolver, String title,
+    public static Uri addImage(ContentResolver resolver, String title,
             long date, Location location, int orientation, byte[] jpeg,
             int width, int height) {
         // Save the image.
-        String path = writeFile(title, jpeg);
-        return addImage(resolver, title, date, location, orientation,
-                jpeg.length, path, width, height);
+        try {
+            String path = writeFile(title, jpeg);
+            return addImage(resolver, title, date, location, orientation,
+                            jpeg.length, path, width, height);
+        }
+        catch(Exception e) {
+            Log.e(TAG, title + ": failed to add image: " + e);
+            return null;
+        }
     }
 
     // Add the image to media store.
-    public Uri addImage(ContentResolver resolver, String title,
+    public static Uri addImage(ContentResolver resolver, String title,
             long date, Location location, int orientation, int jpegLength,
             String path, int width, int height) {
         // Insert into MediaStore.
@@ -133,13 +126,13 @@ public class Storage {
         return uri;
     }
 
-    // nullewImage() and updateImage() together do the same work as
+    // newImage() and updateImage() together do the same work as
     // addImage. newImage() is the first step, and it inserts the DATE_TAKEN and
     // DATA fields into the database.
     //
     // We also insert hint values for the WIDTH and HEIGHT fields to give
     // correct aspect ratio before the real values are updated in updateImage().
-    public Uri newImage(ContentResolver resolver, String title,
+    public static Uri newImage(ContentResolver resolver, String title,
                         long date, int width, int height) {
         String path = generateFilepath(title);
 
@@ -169,11 +162,20 @@ public class Storage {
     // here. This method also save the image data into the file.
     //
     // Returns true if the update is successful.
-    public boolean updateImage(ContentResolver resolver, Uri uri,
+    public static boolean updateImage(ContentResolver resolver, Uri uri,
             String title, Location location, int orientation, byte[] jpeg,
             int width, int height) {
         // Save the image.
-        String path = generateFilepath(title);
+        String path;
+
+        try {
+            path = generateFilepath(title, jpeg.length);
+        }
+        catch(IOException e) {
+            Log.e(TAG, "Failed to generate path " + e);
+            return false;
+        }
+
         String tmpPath = path + ".tmp";
         FileOutputStream out = null;
         try {
@@ -184,13 +186,13 @@ public class Storage {
             out.close();
             new File(tmpPath).renameTo(new File(path));
         } catch (Exception e) {
-            Log.e(TAG, "Failed to write image", e);
+            Log.e(TAG, path + ": failed to write image", e);
             return false;
         } finally {
             try {
-                out.close();
-            } catch (Exception e) {
-                // Do nothing here
+                if(out != null) out.close();
+            } catch (IOException e) {
+                Log.e(TAG, path + ": failed to close file", e);
             }
         }
 
@@ -221,7 +223,7 @@ public class Storage {
         return true;
     }
 
-    public void deleteImage(ContentResolver resolver, Uri uri) {
+    public static void deleteImage(ContentResolver resolver, Uri uri) {
         try {
             resolver.delete(uri, null, null);
         } catch (Throwable th) {
@@ -229,27 +231,33 @@ public class Storage {
         }
     }
 
-    private String generateDCIM() {
-        return new File(mRoot, Environment.DIRECTORY_DCIM).toString();
+
+    public static String getDirectory() {
+        return getRoot();
     }
 
-    public String generateDirectory() {
-        return generateDCIM() + "/Camera";
+    public static String generateFilepath(String title) {
+        return getFilePath(title + ".jpg");
     }
 
-    private String generateFilepath(String title) {
-        return generateDirectory() + '/' + title + ".jpg";
+    public static String
+    generateFilepath(String title, long size) throws IOException {
+        return getFilePath(title + ".jpg", size);
     }
 
-    public String generateBucketId() {
-        return String.valueOf(generateDirectory().toLowerCase().hashCode());
+    public static String generateFilepath(String title, String ext) {
+        return getFilePath(title + ext);
     }
 
-    public int generateBucketIdInt() {
-        return generateDirectory().toLowerCase().hashCode();
+    public static String generateBucketId() {
+        return String.valueOf(getDirectory().toLowerCase().hashCode());
     }
 
-    public long getAvailableSpace() {
+    public static int generateBucketIdInt() {
+        return getDirectory().toLowerCase().hashCode();
+    }
+
+    public static long getAvailableSpace() {
         String state = Environment.getExternalStorageState();
         Log.d(TAG, "External storage state=" + state);
         if (Environment.MEDIA_CHECKING.equals(state)) {
@@ -259,19 +267,13 @@ public class Storage {
             return UNAVAILABLE;
         }
 
-        File dir = new File(generateDirectory());
-        dir.mkdirs();
-        if (!dir.isDirectory() || !dir.canWrite()) {
+        long ret = tk.dead_beef.storageutils.Storage.getAvailableBytes();
+
+        if(ret <= 0) {
             return UNAVAILABLE;
         }
 
-        try {
-            StatFs stat = new StatFs(generateDirectory());
-            return stat.getAvailableBlocks() * (long) stat.getBlockSize();
-        } catch (Exception e) {
-            Log.i(TAG, "Fail to access external storage", e);
-        }
-        return UNKNOWN_SIZE;
+        return ret;
     }
 
     /**
@@ -279,7 +281,7 @@ public class Storage {
      * imported. This is a temporary fix for bug#1655552.
      */
     public void ensureOSXCompatible() {
-        File nnnAAAAA = new File(generateDCIM(), "100ANDRO");
+        File nnnAAAAA = new File(mRoot, "100ANDRO");
         if (!(nnnAAAAA.exists() || nnnAAAAA.mkdirs())) {
             Log.e(TAG, "Failed to create " + nnnAAAAA.getPath());
         }

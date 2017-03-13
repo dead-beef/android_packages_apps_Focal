@@ -171,6 +171,9 @@ public class CameraActivity extends Activity implements CameraManager.CameraRead
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
 
+        Storage.setContext(this, Environment.DIRECTORY_PICTURES);
+        Storage.setRoot(SettingsStorage.getAppSetting(this, "storage-directory", null));
+
         try {
             AssetLibraryLoader.load(this);
         }

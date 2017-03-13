@@ -31,6 +31,7 @@ import org.cyanogenmod.focal.PopenHelper;
 import org.cyanogenmod.focal.SnapshotManager;
 import org.cyanogenmod.focal.Util;
 import org.cyanogenmod.focal.XMPHelper;
+import org.cyanogenmod.focal.Storage;
 
 import tk.dead_beef.storageutils.AssetLibraryLoader;
 
@@ -273,7 +274,7 @@ public class PicSphere {
         // HACK: We cd to /storage/emulated/0/DCIM/Camera/ because cpfind tries to
         // find it in the current path instead of the actual path provided in the .pto. I'm
         // leaving this here as a hack until I fix it properly in cpfind source
-        String dcimPath = "/sdcard/DCIM/Camera";
+        String dcimPath = Storage.getRoot();
 
         String fullCommand = String.format("cd %s; %s 2>&1", dcimPath, command);
 
