@@ -18,4 +18,8 @@ bin/
 /obj
 /res\drawable-xxhdpi/Thumbs.db
 /jni
-/libs/android-support-v4.jar
+/build/
+/local.properties
+/project.properties
+/proguard-project.txt
+.dir-locals.el
