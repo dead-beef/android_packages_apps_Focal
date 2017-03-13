@@ -19,13 +19,15 @@
 
 package org.cyanogenmod.focal;
 
+import tk.dead_beef.storageutils.AssetLibraryLoader;
+
 /**
  * XMP Helper to write XMP data to files
  */
 public class XMPHelper {
     static {
-        System.loadLibrary("xmptoolkit");
-        System.loadLibrary("xmphelper_jni");
+        AssetLibraryLoader.loadLibrary("xmptoolkit");
+        AssetLibraryLoader.loadLibrary("xmphelper_jni");
     }
 
     /**

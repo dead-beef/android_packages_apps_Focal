@@ -56,7 +56,7 @@ public class PreviewFrameLayout extends RelativeLayout {
 
     public void setAspectRatio(double ratio) {
         if (ratio <= 0.0) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("ratio <= 0.0");
         }
 
         ratio = 1 / ratio;

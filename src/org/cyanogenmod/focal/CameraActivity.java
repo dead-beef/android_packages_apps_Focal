@@ -29,6 +29,7 @@ import android.graphics.Point;
 import android.hardware.Camera;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -66,7 +67,11 @@ import org.cyanogenmod.focal.ui.ThumbnailFlinger;
 import org.cyanogenmod.focal.ui.WidgetRenderer;
 import org.cyanogenmod.focal.ui.showcase.ShowcaseView;
 
+import java.io.IOException;
+
 import fr.xplod.focal.R;
+
+import tk.dead_beef.storageutils.AssetLibraryLoader;
 
 public class CameraActivity extends Activity implements CameraManager.CameraReadyListener,
         ShowcaseView.OnShowcaseEventListener {
@@ -165,6 +170,13 @@ public class CameraActivity extends Activity implements CameraManager.CameraRead
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera);
+
+        try {
+            AssetLibraryLoader.load(this);
+        }
+        catch(IOException e) {
+            Log.e(TAG, e.toString());
+        }
 
         mPaused = false;
         mIsCamSwitching = false;

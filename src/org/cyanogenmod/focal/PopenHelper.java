@@ -19,14 +19,16 @@
 
 package org.cyanogenmod.focal;
 
+import tk.dead_beef.storageutils.AssetLibraryLoader;
+
 /**
  * Helper class calling a JNI native popen method to run system
  * commands
  */
 public class PopenHelper {
     static {
-        System.loadLibrary("xmptoolkit");
-        System.loadLibrary("popen_helper_jni");
+        AssetLibraryLoader.loadLibrary("xmptoolkit");
+        AssetLibraryLoader.loadLibrary("popen_helper_jni");
     }
 
     /**

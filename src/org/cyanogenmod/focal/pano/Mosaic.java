@@ -17,6 +17,8 @@
 
 package org.cyanogenmod.focal.pano;
 
+import tk.dead_beef.storageutils.AssetLibraryLoader;
+
 /**
  * The Java interface to JNI calls regarding mosaic stitching.
  *
@@ -94,7 +96,7 @@ public class Mosaic {
 
 
     static {
-        System.loadLibrary("jni_mosaic2");
+        AssetLibraryLoader.loadLibrary("jni_mosaic2");
     }
 
     /**

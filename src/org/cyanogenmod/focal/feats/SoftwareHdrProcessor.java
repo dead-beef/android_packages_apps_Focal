@@ -32,6 +32,8 @@ import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.util.List;
 
+import tk.dead_beef.storageutils.AssetLibraryLoader;
+
 /**
  * Manages the processing of multiple shots into one HDR shot
  */
@@ -74,7 +76,8 @@ public class SoftwareHdrProcessor {
     }
 
     private void run(String command) throws IOException {
-        Runtime rt = Runtime.getRuntime();
+        AssetLibraryLoader.exec(command);
+        /*Runtime rt = Runtime.getRuntime();
         Process proc = rt.exec(command, new String[]{"PATH="+mPathPrefix+":/system/bin",
                 "LD_LIBRARY_PATH="+mPathPrefix+":/system/lib"});
         mProcStdOut = new BufferedReader(new
@@ -86,7 +89,7 @@ public class SoftwareHdrProcessor {
             proc.waitFor();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     public boolean render(final int orientation) {

@@ -32,6 +32,8 @@ import org.cyanogenmod.focal.SnapshotManager;
 import org.cyanogenmod.focal.Util;
 import org.cyanogenmod.focal.XMPHelper;
 
+import tk.dead_beef.storageutils.AssetLibraryLoader;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -227,7 +229,7 @@ public class PicSphere {
             doNona();
             doEnblend();
         } catch (Exception ex) {
-            Log.e(TAG, "Unable to process: ", ex);
+            Log.e(TAG, "Unable to process: " + ex);
             for (ProgressListener listener : mProgressListeners) {
                 listener.onRenderDone(this);
             }
@@ -272,15 +274,19 @@ public class PicSphere {
         // find it in the current path instead of the actual path provided in the .pto. I'm
         // leaving this here as a hack until I fix it properly in cpfind source
         String dcimPath = "/sdcard/DCIM/Camera";
-        String fullCommand = String.format("PATH=%s; LD_LIBRARY_PATH=%s; cd %s; %s 2>&1",
-                mPathPrefix+":/system/bin",
-                mPathPrefix+":"+mPathPrefix+"/../lib/:/system/lib",
-                dcimPath,
-                command);
+
+        String fullCommand = String.format("cd %s; %s 2>&1", dcimPath, command);
 
         Log.v(TAG, "Running: " + fullCommand);
 
-        if (PopenHelper.run(fullCommand) != EXIT_SUCCESS) {
+        /*AssetLibraryLoader.Result res = AssetLibraryLoader.exec(fullCommand, true);
+        Log.v(TAG, res.output);
+        if (res.returnValue != EXIT_SUCCESS) {
+            Log.e(TAG, "Command return code is not EXIT_SUCCESS!");
+            return false;
+        }*/
+
+        if (AssetLibraryLoader.exec(fullCommand) != EXIT_SUCCESS) {
             Log.e(TAG, "Command return code is not EXIT_SUCCESS!");
             return false;
         }
@@ -318,9 +324,12 @@ public class PicSphere {
             filesStr += " " + picture.getRealPath().getPath();
         }
 
-        if (!run(String.format("pto_gen -f %f -p %d -o %s %s",
-                mHorizontalAngle, PANO_PROJECTION_MODE,
-                mProjectFile, filesStr))) {
+        String cmd = String.format("pto_gen -f %f -p %d -o %s %s",
+                                   mHorizontalAngle, PANO_PROJECTION_MODE,
+                                   mProjectFile, filesStr);
+        //Log.d(TAG, cmd);
+
+        if (!run(cmd)) {
             throw new IOException("PtoGen failed");
         }
 

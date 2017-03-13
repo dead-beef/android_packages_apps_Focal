@@ -207,7 +207,7 @@ public class PicSphereManager implements PicSphere.ProgressListener {
      */
     private boolean copyBinaries() {
         boolean result = true;
-        try {
+        /*try {
             String files[] = {
                     "autooptimiser", "pto_gen", "cpfind", "multiblend", "enfuse", "nona", "pano_modify",
                     "ptclean", "tiffinfo", "align_image_stack", "pto_var",
@@ -248,7 +248,7 @@ public class PicSphereManager implements PicSphere.ProgressListener {
         } catch (Exception e) {
             Log.e(TAG, "Error copying libraries and binaries", e);
             result = false;
-        }
+        }*/
         return result;
     }
 
